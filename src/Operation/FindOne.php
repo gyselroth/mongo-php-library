@@ -81,6 +81,19 @@ class FindOne implements Executable
      */
     public function __construct($databaseName, $collectionName, $filter, array $options = [])
     {
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * 20170914 temporary hotfix: enable reading file streams from 'contents.files' w/ primary key '_id'
+         *                            instead of (hard-coded):         'fs.files' w/ primary key 'filename'
+         * @todo 1. remove override-hack
+         * @todo 2. correct MongoDb_CollectionAbstract constructor init of $config['options'] => ['bucketName' => '...'
+         * @todo 3. ensure using CollectionWrapper::findFileById() instead of findFileByFilenameAndRevision() than
+         */
+        if (!empty($_SESSION['overrideBucket'])) {
+            $options['bucketName'] = $_SESSION['overrideBucket'];
+        }
+        /** --------------------------------------------------------------------------------------------------------- */
+
         $this->find = new Find(
             $databaseName,
             $collectionName,

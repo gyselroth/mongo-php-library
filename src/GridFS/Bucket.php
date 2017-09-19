@@ -82,8 +82,20 @@ class Bucket
      */
     public function __construct(Manager $manager, $databaseName, array $options = [])
     {
+
         $options += [
-            'bucketName' => self::$defaultBucketName,
+//            'bucketName' => self::$defaultBucketName,
+            /**
+             * ---------------------------------------------------------------------------------------------------------
+             * 20170914 temporary hotfix: enable reading file streams from 'contents.files' w/ primary key '_id'
+             *                            instead of (hard-coded):         'fs.files' w/ primary key 'filename'
+             * @todo 1. remove override-hack
+             * @todo 2. correct MongoDb_CollectionAbstract constructor init of $config['options'] => ['bucketName' => '...'
+             * @todo 3. ensure using CollectionWrapper::findFileById() instead of findFileByFilenameAndRevision() than
+             */
+            'bucketName' =>  empty($_SESSION['overrideBucket']) ? self::$defaultBucketName : $_SESSION['overrideBucket'],
+            /** ----------------------------------------------------------------------------------------------------- */
+
             'chunkSizeBytes' => self::$defaultChunkSizeBytes,
         ];
 
@@ -563,6 +575,19 @@ class Bucket
      */
     private function openDownloadStreamByFile(stdClass $file)
     {
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * 20170914 temporary hotfix: enable reading file streams from 'contents.files' w/ primary key '_id'
+         *                            instead of (hard-coded):         'fs.files' w/ primary key 'filename'
+         * @todo 1. remove override-hack
+         * @todo 2. correct MongoDb_CollectionAbstract constructor init of $config['options'] => ['bucketName' => '...'
+         * @todo 3. ensure using CollectionWrapper::findFileById() instead of findFileByFilenameAndRevision() than
+         */
+        if (!empty($_SESSION['overrideBucket'])) {
+            $this->bucketName = $_SESSION['overrideBucket'];
+        }
+        /** --------------------------------------------------------------------------------------------------------- */
+
         $path = $this->createPathForFile($file);
         $context = stream_context_create([
             self::$streamWrapperProtocol => [
@@ -584,5 +609,19 @@ class Bucket
         }
 
         StreamWrapper::register(self::$streamWrapperProtocol);
+    }
+
+    /**
+     * 20170914 temporary hotfix: enable reading file streams from 'contents.files' w/ primary key '_id'
+     *                            instead of (hard-coded):         'fs.files' w/ primary key 'filename'
+     * @todo 1. remove override-hack
+     * @todo 2. correct MongoDb_CollectionAbstract constructor init of $config['options'] => ['bucketName' => '...'
+     * @todo 3. ensure using CollectionWrapper::findFileById() instead of findFileByFilenameAndRevision() than
+     *
+     * @param  string $bucketName
+     */
+    public function setBucketName($bucketName)
+    {
+        $this->bucketName = $bucketName;
     }
 }

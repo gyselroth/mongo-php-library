@@ -49,6 +49,19 @@ class CollectionWrapper
      */
     public function __construct(Manager $manager, $databaseName, $bucketName, array $collectionOptions = [])
     {
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * 20170914 temporary hotfix: enable reading file streams from 'contents.files' w/ primary key '_id'
+         *                            instead of (hard-coded):         'fs.files' w/ primary key 'filename'
+         * @todo 1. remove override-hack
+         * @todo 2. correct MongoDb_CollectionAbstract constructor init of $config['options'] => ['bucketName' => '...'
+         * @todo 3. ensure using CollectionWrapper::findFileById() instead of findFileByFilenameAndRevision() than
+         */
+        if (!empty($_SESSION['overrideBucket'])) {
+            $bucketName = $_SESSION['overrideBucket'];
+        }
+        /** --------------------------------------------------------------------------------------------------------- */
+
         $this->databaseName = (string) $databaseName;
         $this->bucketName = (string) $bucketName;
 
@@ -138,14 +151,37 @@ class CollectionWrapper
             $sortOrder = 1;
         }
 
+//        return $this->filesCollection->findOne(
+//            ['filename' => $filename],
+//            [
+//                'skip' => $skip,
+//                'sort' => ['uploadDate' => $sortOrder],
+//                'typeMap' => ['root' => 'stdClass'],
+//            ]
+//        );
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * 20170914 temporary hotfix: enable reading file streams from 'contents.files' w/ primary key '_id'
+         *                            instead of (hard-coded):         'fs.files' w/ primary key 'filename'
+         * @todo 1. remove override-hack
+         * @todo 2. correct MongoDb_CollectionAbstract constructor init of $config['options'] => ['bucketName' => '...'
+         * @todo 3. ensure using CollectionWrapper::findFileById() instead of findFileByFilenameAndRevision() than
+         */
+        $filterKey = 'filename';
+        if (!empty($_SESSION['overrideBucket'])) {
+            $filterKey        = '_id';
+            $this->bucketName = $_SESSION['overrideBucket'];
+        }
+
         return $this->filesCollection->findOne(
-            ['filename' => $filename],
+            [$filterKey => $filename],
             [
                 'skip' => $skip,
                 'sort' => ['uploadDate' => $sortOrder],
                 'typeMap' => ['root' => 'stdClass'],
             ]
         );
+        /** --------------------------------------------------------------------------------------------------------- */
     }
 
     /**

@@ -553,6 +553,19 @@ class Collection
             $options['typeMap'] = $this->typeMap;
         }
 
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * 20170914 temporary hotfix: enable reading file streams from 'contents.files' w/ primary key '_id'
+         *                            instead of (hard-coded):         'fs.files' w/ primary key 'filename'
+         * @todo 1. remove override-hack
+         * @todo 2. correct MongoDb_CollectionAbstract constructor init of $config['options'] => ['bucketName' => '...'
+         * @todo 3. ensure using CollectionWrapper::findFileById() instead of findFileByFilenameAndRevision() than
+         */
+        if (!empty($_SESSION['overrideBucket'])) {
+            $this->collectionName = $_SESSION['overrideBucket'] . '.files';
+        }
+        /** --------------------------------------------------------------------------------------------------------- */
+
         $operation = new FindOne($this->databaseName, $this->collectionName, $filter, $options);
 
         return $operation->execute($server);

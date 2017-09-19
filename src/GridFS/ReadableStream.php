@@ -153,15 +153,37 @@ class ReadableStream
 
         $data = '';
 
-        while (strlen($data) < $length) {
-            if ($this->bufferOffset >= strlen($this->buffer) && ! $this->initBufferFromNextChunk()) {
-                break;
-            }
+//        while (strlen($data) < $length) {
+//            if ($this->bufferOffset >= strlen($this->buffer) && ! $this->initBufferFromNextChunk()) {
+//                break;
+//            }
+//
+//            $initialDataLength = strlen($data);
+//            $data .= substr($this->buffer, $this->bufferOffset, $length - $initialDataLength);
+//            $this->bufferOffset += strlen($data) - $initialDataLength;
+//        }
+        /**
+         * -------------------------------------------------------------------------------------------------------------
+         * 20170914 temporary hotfix: enable reading file streams from 'contents.files' w/ primary key '_id'
+         *                            instead of (hard-coded):         'fs.files' w/ primary key 'filename'
+         * @todo 1. remove override-hack
+         * @todo 2. correct MongoDb_CollectionAbstract constructor init of $config['options'] => ['bucketName' => '...'
+         * @todo 3. ensure using CollectionWrapper::findFileById() instead of findFileByFilenameAndRevision() than
+         */
+        try {
+            while (strlen($data) < $length) {
+                if ($this->bufferOffset >= strlen($this->buffer) && !$this->initBufferFromNextChunk()) {
+                    break;
+                }
 
-            $initialDataLength = strlen($data);
-            $data .= substr($this->buffer, $this->bufferOffset, $length - $initialDataLength);
-            $this->bufferOffset += strlen($data) - $initialDataLength;
+                $initialDataLength  = strlen($data);
+                $data               .= substr($this->buffer, $this->bufferOffset, $length - $initialDataLength);
+                $this->bufferOffset += strlen($data) - $initialDataLength;
+            }
+        } catch(Exception $e) {
+            // Silently continue
         }
+        /** --------------------------------------------------------------------------------------------------------- */
 
         return $data;
     }
